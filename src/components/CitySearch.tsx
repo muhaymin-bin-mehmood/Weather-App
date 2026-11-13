@@ -7,6 +7,7 @@ import { KEYS, storage } from '../lib/storage';
 import { validateCityQuery } from '../lib/validation';
 import type { City } from '../types';
 import { Icon } from './Icon';
+import { Select, type SelectOption } from './Select';
 
 interface Props {
   onSelect: (city: City) => void;
@@ -14,13 +15,17 @@ interface Props {
   disabledReason?: string | null;
 }
 
+const countryOptions: SelectOption[] = [
+  { value: '', label: 'All countries' },
+  ...countries().map((c) => ({ value: c.code, label: c.name, hint: c.code })),
+];
+
 export function CitySearch({ onSelect, disabledReason }: Props) {
   const id = useId();
   const inputId = `${id}-input`;
   const listId = `${id}-list`;
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
-  const countryId = `${id}-country`;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [value, setValue] = useState('');
@@ -161,30 +166,28 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
 
   return (
     <form className="search" onSubmit={onSubmit} noValidate role="search">
-      <div className="country-row">
-        <label htmlFor={countryId}>Country</label>
-        <select
-          id={countryId}
-          className="country-select"
-          value={country}
-          disabled={disabled}
-          onChange={(e) => {
-            const next = e.target.value;
-            setCountry(next);
-            storage.set(KEYS.searchCountry, next);
-            // A city picked under the old filter stays shown; typing again searches the new country.
-            setActive(-1);
-            if (error) setError(null);
-          }}
-        >
-          <option value="">All countries</option>
-          {countries().map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      <Select
+        className="country-picker"
+        label="Country"
+        value={country}
+        options={countryOptions}
+        disabled={disabled}
+        searchable
+        searchPlaceholder="Type a country"
+        onChange={(next) => {
+          setCountry(next);
+          storage.set(KEYS.searchCountry, next);
+          // A new country starts a new search: clear the city field and close its suggestions.
+          // The weather already on screen stays until another city is picked.
+          setValue('');
+          setSelected(null);
+          setOpen(false);
+          setActive(-1);
+          setError(null);
+          setDirty(false);
+          setPendingQuery(null);
+        }}
+      />
       <label htmlFor={inputId} className="sr-only">
         Search a city
       </label>

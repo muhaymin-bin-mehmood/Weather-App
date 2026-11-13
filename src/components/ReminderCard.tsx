@@ -5,6 +5,7 @@ import { nextOccurrence } from '../reminder/schedule';
 import { useReminder } from '../reminder/useReminder';
 import type { City } from '../types';
 import { Icon } from './Icon';
+import { TimePicker } from './TimePicker';
 
 interface Props {
   currentCity: City | null;
@@ -23,7 +24,6 @@ function describeNext(date: Date): string {
 
 export function ReminderCard({ currentCity, unit }: Props) {
   const r = useReminder(currentCity, unit);
-  const timeId = useId();
   const errorId = useId();
   const [explaining, setExplaining] = useState(false);
   const [timeValue, setTimeValue] = useState('');
@@ -85,10 +85,10 @@ export function ReminderCard({ currentCity, unit }: Props) {
     );
   }
 
-  const commitTime = async () => {
-    const err = validateReminderTime(timeValue);
+  const commitTime = async (next: string) => {
+    const err = validateReminderTime(next);
     setTimeError(err);
-    if (!err && timeValue !== r.settings?.time) await r.setTime(timeValue);
+    if (!err && next !== r.settings?.time) await r.setTime(next);
   };
 
   const turnOn = async () => {
@@ -107,25 +107,15 @@ export function ReminderCard({ currentCity, unit }: Props) {
 
   const controls = (
     <div className="briefing-row">
-      <div className="field">
-        <label htmlFor={timeId} className="sr-only">
-          Remind me at
-        </label>
-        <input
-          id={timeId}
-          type="time"
-          className="input time-input"
-          value={timeValue}
-          required
-          aria-invalid={timeError ? true : undefined}
-          aria-describedby={timeError ? errorId : undefined}
-          onChange={(e) => {
-            setTimeValue(e.target.value);
-            if (timeError) setTimeError(validateReminderTime(e.target.value));
-          }}
-          onBlur={commitTime}
-        />
-      </div>
+      <TimePicker
+        label="Remind me at"
+        value={timeValue}
+        describedBy={timeError ? errorId : undefined}
+        onChange={(next) => {
+          setTimeValue(next);
+          void commitTime(next);
+        }}
+      />
       <button
         type="button"
         role="switch"

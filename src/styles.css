@@ -507,41 +507,193 @@ svg {
 .search {
   position: relative;
 }
-.country-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
+/* ---------- Custom select (country, reminder time) ---------- */
+.select {
+  position: relative;
+  min-width: 0;
 }
-.country-row label {
-  flex: none;
+.select-label {
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
-.country-select {
-  flex: 1;
-  min-width: 0;
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
   min-height: var(--tap);
-  padding: 0 36px 0 12px;
+  padding: 0 12px 0 14px;
   border: 1px solid var(--line-strong);
   border-radius: 10px;
-  background: var(--field)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%237f8a88' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    no-repeat right 14px center;
-  color: var(--text);
-  font: inherit;
-  appearance: none;
+  background: var(--field);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.country-select:focus {
+.select-trigger:hover:not(:disabled) {
+  border-color: var(--text);
+}
+.select-trigger:focus-visible,
+.select.is-open .select-trigger {
   outline: none;
   border-color: var(--text);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ember) 28%, transparent);
 }
-.country-select:disabled {
+.select-trigger:disabled {
   opacity: 0.6;
 }
+.select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-chevron {
+  color: var(--muted);
+  transition: transform 0.18s ease;
+}
+.select.is-open .select-chevron {
+  transform: rotate(180deg);
+}
+.select-popup {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  animation: rise 0.14s ease-out;
+}
+.select-popup.drop-up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+.select-popup.align-stretch {
+  left: 0;
+  right: 0;
+}
+.select-popup.align-start {
+  left: 0;
+  min-width: 100%;
+}
+.select-popup.align-end {
+  right: 0;
+  min-width: 100%;
+}
+.select-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+}
+.select-filter input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  border: 0;
+  background: transparent;
+  color: var(--text);
+}
+.select-filter input:focus {
+  outline: none;
+}
+.select-list {
+  position: relative; /* offsetTop of options is measured from the list */
+  max-height: 264px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  scrollbar-width: thin;
+}
+.select-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tap);
+  padding: 0 10px 0 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.select-option.is-active {
+  background: var(--hover);
+}
+.select-option.is-selected {
+  font-weight: 600;
+}
+.select-option-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.select-option-hint {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.select-check {
+  color: var(--ember);
+}
+.select-empty {
+  padding: 12px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+/* Country: label on the left, picker filling the rest. */
+.country-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.country-picker .select-label {
+  flex: none;
+}
+.country-picker .select-trigger {
+  flex: 1;
+}
+.country-picker .select-popup {
+  left: 0;
+  right: 0;
+}
+.country-picker > .select-trigger {
+  min-width: 0;
+}
+
+/* Reminder time: hour : minute  AM/PM */
+.time-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.time-part .select-trigger {
+  min-width: 66px;
+  padding: 0 8px 0 12px;
+  font-size: 1rem;
+}
+.time-period {
+  margin-left: 6px;
+}
+.time-part .select-popup {
+  min-width: 84px;
+}
+.time-part .select-list {
+  max-height: 220px;
+}
+.time-colon {
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .search-field {
   position: relative;
   display: flex;
@@ -1008,12 +1160,6 @@ svg {
   align-items: center;
   justify-content: space-between;
   gap: var(--s2);
-}
-.briefing-row .field {
-  flex: 0 1 180px;
-}
-.time-input {
-  font-size: 1rem;
 }
 .briefing-status {
   display: flex;

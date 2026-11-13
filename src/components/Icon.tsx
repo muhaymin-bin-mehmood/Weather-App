@@ -19,6 +19,7 @@ const PATHS = {
   check: 'M5 12.5 10 17 19 7',
   info: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zm0-6v-4m0-4h.01',
   enter: 'M20 5v7a3 3 0 0 1-3 3H5m0 0 4-4m-4 4 4 4',
+  chevron: 'M6 9l6 6 6-6',
   clock: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zm0-14v4l3 2',
 } as const;
 

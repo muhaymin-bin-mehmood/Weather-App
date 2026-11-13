@@ -39,7 +39,13 @@ The outlook copy ("A calm, clear night." and the sentence under it) is generated
 These two were added on request after the core requirements were done. Neither is in the Edspire brief.
 
 - **Weather-tinted background.** The page around the sheet, and a soft band at its top, take a colour from the current conditions: warm for a clear day, blue for a clear night, grey for cloud, sand for fog, teal for rain, violet for storms, pale blue for snow. All text stays on the normal surface colour, so contrast does not change. The mapping is `skyFor()` in `src/lib/outlook.ts`.
-- **Optional country filter.** A "Country" select sits above the city search. Its default is "All countries", and the choice is remembered. It narrows the same live autocomplete (GeoDB `countryIds`, Open-Meteo `countryCode`); it does not replace it, because requirement 01 asks for suggestions as the user types. The country list ships with the app (ISO codes, with names from the browser's `Intl.DisplayNames`). Fetching it from GeoDB's `/countries` would spend the 1 request/second budget and fail offline. When several places share a name and province (Pakistan has a "Hyderabad" in at least four Punjab and Sindh districts), the district is added to the suggestion so they don't look like duplicates.
+- **Optional country filter.** A "Country" select sits above the city search. Its default is "All countries", and the choice is remembered. It narrows the same live autocomplete (GeoDB `countryIds`, Open-Meteo `countryCode`); it does not replace it, because requirement 01 asks for suggestions as the user types. The country list ships with the app (ISO codes, with names from the browser's `Intl.DisplayNames`). Fetching it from GeoDB's `/countries` would spend the 1 request/second budget and fail offline. Changing the country clears the city field and closes its suggestions, because the old text was a search in another country; the weather already on screen stays. When several places share a name and province (Pakistan has a "Hyderabad" in at least four Punjab and Sindh districts), the district is added to the suggestion so they don't look like duplicates.
+
+- **Styled dropdowns instead of native controls.** The country picker and the reminder time (hour, minute, AM/PM) use one `Select` component (`src/components/Select.tsx`) instead of `<select>` and `<input type="time">`, so they match the design in every browser. It follows the WAI-ARIA select-only combobox pattern:
+  - keys: ↑/↓, Home/End, PageUp/PageDown, type-ahead, Enter or Space to pick, Escape to cancel, Tab to pick and move on
+  - long lists such as countries get a filter field
+  - the list opens upwards when there is no room below, and it scrolls itself without moving the page
+  - the reminder time is still stored as 24-hour `HH:MM`, so scheduling did not change
 
 ## Setup
 

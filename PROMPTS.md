@@ -282,3 +282,31 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
   - Five "Hyderabad" rows looked like duplicates but were real villages in different districts. The district is now shown when the name and province match.
 - **OpenWeatherMap key now active.** Picking Hyderabad sent `/weather` 200 and `/forecast` 200, and the card showed "OpenWeatherMap".
 - Tests: 38/38 passing (5 new).
+
+## Message 15
+
+**My message:** "Yes, push". The agent pushed `0bd6e9b` and confirmed that `main` on GitHub matched the local branch.
+
+## Message 16
+
+**My message:**
+
+> okay 2 more things before we move forward
+> (1) The country dropdown changes should automatically remove the cities dropdown
+> (2) Second both of the dropdown needs to be attractive not browser native same goes for the Timer alarm setting dropdown as well
+
+**Agent actions:**
+
+- **(1)** Picking a country now clears the city field, closes its suggestions, and clears any validation error. The weather already on screen stays.
+- **(2)** Built one `Select` component (WAI-ARIA select-only combobox: keyboard, type-ahead, Escape, Tab, click-outside) and used it for:
+  - the country picker, with a filter field and country codes
+  - the reminder time, as three pickers (hour, minute, AM/PM) that still store 24-hour `HH:MM`
+- New unit tests round-trip every hour of the day through the 12-hour picker, including midnight and noon. 40/40 passing.
+- **Bugs found while testing in the browser, all fixed:**
+  - On opening, the highlight jumped to "All countries" instead of the current country. Clearing a leftover filter reset it.
+  - `scrollIntoView` on the highlighted option scrolled the whole page. The list now scrolls only itself.
+  - Near the bottom of a phone screen the time list opened off-screen. It now opens upwards when there isn't room.
+- **Checked:**
+  - In the browser pane at 1280 px (light) and 375 px (dark): typed "Kar", then picked India by keyboard. The country showed "India", the city field emptied, its suggestions closed, the placeholder read "Search a city in India", and focus returned to the picker.
+  - Hour changed 07→08 by keyboard and was saved to IndexedDB as `08:30`. Escape on the minute list changed nothing.
+  - In my Chrome, the popup rendered fully opaque. In the hidden browser pane, animations were paused.
