@@ -7,16 +7,18 @@
 
 ## How to read this file
 
-Every message I sent to the agent is listed in order. Each entry keeps these parts apart:
+The prompts below are the ones that shaped the app: requirements, design, features and verification. They are in the order I sent them. Each entry keeps these parts apart:
 
-- **My message:** exactly what I typed, clicked or pasted, nothing added. A button click or option choice is labelled as one.
+- **My message:** exactly what I typed or pasted, nothing added.
 - **Pasted material:** text I pasted that I didn't write myself (an email, or a summary written by an AI assistant). It is labelled with where it came from.
-- **Translation:** an English translation of Roman Urdu, added for readers. It was not part of the message.
+- **Translation:** an English translation of Roman Urdu or Hindi, added for readers. It was not part of the message.
 - **Agent actions:** a summary I wrote afterwards of what the agent did. It is not part of the conversation.
+
+Short routine messages (commit and push confirmations, opening sign-up pages, setting up API keys, deploying) are not written out in full. They are listed in one line each under [Routine messages](#routine-messages) at the end, so the history is still complete.
 
 ---
 
-## Message 1: brief and request
+## Prompt 1: the brief
 
 **Attachment:** `Edspire-Frontend-Technical-Challenge.pdf`
 
@@ -55,32 +57,9 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
 **Agent actions:** Read the PDF. Pointed out the tool requirement in the brief, and asked whether to build here or produce a plan for another IDE.
 
 ---
+## Prompt 2: build it here
 
-## Message 2: chose a plan
-
-**My message (option chosen from the agent's multiple-choice question):**
-
-> IDE ke liye plan (Recommended)
-
-**Translation:** "Plan for the IDE (Recommended)"
-
-**Agent actions:** Wrote `WEATHERBOARD_PLAN.md`. It is git-ignored personal notes, not part of the repo. It contains stack decisions, nine phases with prompts, checks to run after each phase, and a submission checklist.
-
----
-
-## Message 3
-
-**My message (typed while the agent was writing the plan):**
-
-> We are using CLAUDE
-
-**Agent actions:** Asked whether I meant a Claude model inside another editor, or building in Claude Code itself.
-
----
-
-## Message 4
-
-**My message (reply button clicked):**
+**My message (reply button clicked, after choosing to build in Claude Code rather than write a plan for another IDE):**
 
 > Build here in Claude Code
 
@@ -111,7 +90,7 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
 
    API keys were not configured yet, so every request went through the Open-Meteo fallbacks.
 
-**Problems found and fixed during message 4:**
+**Problems found and fixed:**
 
 | Problem | How it was caught | Fix |
 |---|---|---|
@@ -123,7 +102,7 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
 
 ---
 
-## Message 5
+## Prompt 3: review checklist
 
 **My message (pasted):**
 
@@ -135,7 +114,7 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
 > 6. Check autocomplete timing under GeoDB’s rate limit. Document measured behaviour and any limitation honestly.
 > 7. Run the final checks, initialise git and commit. Then help me publish the public GitHub repository and deploy, add the actual live URL to README, and verify the deployed app.
 
-**Agent actions (so far):**
+**Agent actions:**
 
 - `.gitignore` now covers `.env` and `.env.*` (except `.env.example`), key files, `node_modules`, `dist`, `.vercel` and local tool folders. `.env.example` contains only empty placeholders.
 - This file was rewritten into the format above. No "Continued…" lines were in the previous version.
@@ -156,25 +135,18 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
   - Pressing Enter before suggestions arrived left a "Still looking up…" error on screen after they had loaded. The submit is now remembered, and the top match opens as soon as results arrive.
   - Every keystroke waited for GeoDB to fail again. A circuit breaker now skips GeoDB for the rest of the session after the key is rejected, and for 60 s after a server or network error. Verified: the next search made no GeoDB request.
 - **Offline cold start, partly verified.** Lahore was loaded online, the tab was closed and the local server stopped (a probe request failed). Reopening the app booted it from the service worker cache and showed Lahore. The machine's internet was still on, though, so the weather APIs answered. Starting with the network fully off still has to be tested in Chrome DevTools.
-- **Notification permission** is always `denied` in the built-in browser pane, so the granted-permission reminder test has to run in real Chrome.
+- **Reminder test, run in my Chrome** (the built-in browser always denies notifications):
+  - **Permission granted.** Notifications were already allowed for `localhost:4173` from my own earlier try, and Periodic Background Sync was also granted, with tag `daily-weather` registered. Because the permission was already granted, the "explain before the browser prompt" step could not be replayed on that origin.
+  - **Permission denied.** On `127.0.0.1:4175`, Chrome reported `denied` without showing a prompt. The reminder card showed the blocked message, and search and weather kept working.
+  - **Test notification.** "Send a test" produced a notification via the service worker registration: "Good morning — Lahore", "68°F, clear sky · H 81° L 67°".
+  - **Scheduling.** At 23:48:26 the reminder time was set to 23:50. The card changed to "Next: today at 11:50 PM for Lahore". The notification appeared at 23:50:00–01 (I also saw it as a Windows notification). `lastShownDate` was then set to 2026-11-13, and the card changed to "Next: tomorrow at 11:50 PM".
+  - **Not tested.** A reminder while the app is closed, via Periodic Background Sync. Chrome decides when that event fires, so it is best-effort and could not be observed on demand.
 
-## Message 6
+---
 
-**My message (reply button clicked):**
+## Prompt 4: offline startup
 
-> Yes, use Chrome
-
-**Agent actions (in my Chrome through the Claude in Chrome extension, against `vite preview` on localhost):**
-
-- **Permission granted.** Notifications were already allowed for `localhost:4173` from my own earlier try, and Periodic Background Sync was also granted, with tag `daily-weather` registered. Because the permission was already granted, the "explain before the browser prompt" step could not be replayed on that origin.
-- **Permission denied.** On `127.0.0.1:4175`, Chrome reported `denied` without showing a prompt. The reminder card showed the blocked message, and search and weather kept working.
-- **Test notification.** "Send a test" produced a notification via the service worker registration: "Good morning — Lahore", "68°F, clear sky · H 81° L 67°".
-- **Scheduling.** At 23:48:26 the reminder time was set to 23:50. The card changed to "Next: today at 11:50 PM for Lahore". The notification appeared at 23:50:00–01 (I also saw it as a Windows notification). `lastShownDate` was then set to 2026-11-13, and the card changed to "Next: tomorrow at 11:50 PM".
-- **Not tested.** A reminder while the app is closed, via Periodic Background Sync. Chrome decides when that event fires, so it is best-effort and could not be observed on demand.
-
-## Message 7 (new session, after the 5-hour usage limit)
-
-**My message:** the previous session hit the usage limit in the middle of the offline test. I started a new Claude Code session and pasted the earlier transcript (my messages and the agent's replies) so it could continue. I then sent DevTools screenshots of the Network and Service workers panels, and pasted the service worker's console errors (`Uncaught (in promise) TypeError: Failed to fetch … at g._handleFetch`).
+**My message:** after the first session hit its usage limit, I continued item 4 of Prompt 3 in a new session. I sent DevTools screenshots of the Network and Service workers panels, and pasted the service worker's console errors (`Uncaught (in promise) TypeError: Failed to fetch … at g._handleFetch`).
 
 **Agent actions:**
 
@@ -182,8 +154,15 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
 - With the DevTools Offline switches turned off, the cache was inspected from the page. The worker was active and controlling the page, but `workbox-precache-v2-…` held **0 entries**. Workbox only fills the precache during `install`, so this worker could never serve the shell offline.
 - **Fix:** `src/sw.ts` handles a `REPAIR_PRECACHE` message and refetches only the manifest entries missing from the cache. `src/components/Chrome.tsx` sends it on every online load.
 - **Verified:** all 12 cache entries were deleted by hand from the page, then the page was reloaded online. The cache went back to 12 entries, including `index.html`. The full network-off cold start has to be repeated on the final build.
+- **Result, from my screenshots after the design change in Prompt 5:**
+  - **Offline cold start: passed.** All `localhost:4173` tabs were closed. I opened a new tab, set DevTools Network to **Offline**, then opened `localhost:4173`. The app loaded from the service-worker cache in the new design, with the saved Lahore forecast. The banner read "You're offline. Showing Lahore as of Nov 14, 12:14 AM", and search was disabled with its reason.
+  - **Second run, both switches on.** With Network **Offline** *and* Application → Service workers **Offline** ticked, the page showed Karachi, the last city viewed online, from its snapshot. The banner read "Showing Karachi as of Nov 14, 12:14 AM", worker #319 was active and controlling the page, and the Network panel recorded no requests.
+  - **Back online:** searching "lahore" listed suggestions (from Open-Meteo, because no GeoDB key is configured yet). Picking Karachi loaded its weather.
+  - **Small fix:** the offline search placeholder was cut off ("…unavailable offlin"), so it is now "Offline — search paused".
 
-## Message 8 (sent while the agent was working)
+---
+
+## Prompt 5: design direction (sent while the agent was working)
 
 **Pasted material (design direction I made with ChatGPT, plus its board image):**
 
@@ -210,29 +189,11 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
   - At 768 px, the three-column hero squeezed the outlook text. The hero and forecast now switch layout with container queries.
 - `npm test`: 29/29 passing. The build is clean.
 
-## Message 9
+---
 
-**My message:** "Done, screenshot sent" (the first time, no screenshot was attached; I sent the screenshots in the next message).
+## Prompt 3, continued: real API keys
 
-**Result (from my Chrome screenshots):**
-
-- **Offline cold start: passed.** All `localhost:4173` tabs were closed. I opened a new tab, set DevTools Network to **Offline**, then opened `localhost:4173`. The app loaded from the service-worker cache in the new design, with the saved Lahore forecast. The banner read "You're offline. Showing Lahore as of Nov 14, 12:14 AM", and search was disabled with its reason.
-- **Second run, both switches on.** With Network **Offline** *and* Application → Service workers **Offline** ticked, the page showed Karachi, the last city viewed online, from its snapshot. The banner read "Showing Karachi as of Nov 14, 12:14 AM", worker #319 was active and controlling the page, and the Network panel recorded no requests.
-- **Back online:** searching "lahore" listed suggestions (from Open-Meteo, because no GeoDB key is configured yet). Picking Karachi loaded its weather.
-- **Small fix:** the offline search placeholder was cut off ("…unavailable offlin"), so it is now "Offline — search paused".
-
-## Message 10
-
-**My message:** "okay open it in the chrome browser and get me there then i'll create the key and put it in the .env file"
-
-**Agent actions:**
-
-- Opened the OpenWeatherMap API-keys page and the GeoDB Cities page on RapidAPI in Chrome, and created an empty `.env` from `.env.example` (git-ignored).
-- I created the accounts and keys myself and pasted them into `.env`. The agent checked only the lengths (32 and 50 characters), never the values.
-
-## Message 11 ("DONE", plus screenshots)
-
-**Agent actions:**
+After I created both API keys myself and put them in `.env` (see Routine messages), the agent checked items 3 and 6 of Prompt 3.
 
 - **Direct checks with curl.** OpenWeatherMap returned 401 "Invalid API key": the key showed Active, but my email was not yet confirmed, and new keys take up to 2 hours. GeoDB first returned 403 "You are not subscribed to this API". After I subscribed to the Basic plan, it returned 200.
 - **Real data problem found.** With `types=CITY`, GeoDB's only "Lahore" is Lahore, Virginia (population 0). Pakistan's Lahore exists only as an ADM2 ("Lahore District"/"Lahore Division"). Karachi, London and the other cities tried were fine.
@@ -243,21 +204,11 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
   - "Lahore" took 2.2 s before the parallel change and ~1.0 s after it
   - a repeated query came from the cache in 11 ms
   - The 300 ms target is not met; README explains why.
-- **Weather.** Picking Lahore sent OpenWeatherMap `/weather` 401 and `/forecast` 401, then Open-Meteo `/v1/forecast` 200, and the card showed "Open-Meteo". OpenWeatherMap as the primary source is still unverified until the key activates.
+- **Weather.** Picking Lahore sent OpenWeatherMap `/weather` 401 and `/forecast` 401, then Open-Meteo `/v1/forecast` 200, and the card showed "Open-Meteo". OpenWeatherMap as the primary source was verified once the key activated (Prompt 6).
 
-## Message 12
+---
 
-**My message:** "Yes, commit now"
-
-**Agent actions:** ran `git init` on `main`. Moved `tsconfig.tsbuildinfo` into `.gitignore`. Checked that no staged file contains either real key from `.env`, then made the first commit (`6a39c01`).
-
-## Message 13
-
-**My message:** the repo URL, `https://github.com/muhaymin-bin-mehmood/Weather-App`
-
-**Agent actions:** added the remote, confirmed it was empty, and pushed `main`. Then confirmed that GitHub's `main` matched the local commit, that the repo page is public (200), and that `.env` is not on GitHub (404).
-
-## Message 14
+## Prompt 6: weather background and country filter
 
 **My message:**
 
@@ -285,11 +236,9 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
 - **OpenWeatherMap key now active.** Picking Hyderabad sent `/weather` 200 and `/forecast` 200, and the card showed "OpenWeatherMap".
 - Tests: 38/38 passing (5 new).
 
-## Message 15
+---
 
-**My message:** "Yes, push". The agent pushed `0bd6e9b` and confirmed that `main` on GitHub matched the local branch.
-
-## Message 16
+## Prompt 7: reset city on country change; styled dropdowns
 
 **My message:**
 
@@ -313,30 +262,23 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
   - Hour changed 07→08 by keyboard and was saved to IndexedDB as `08:30`. Escape on the minute list changed nothing.
   - In my Chrome, the popup rendered fully opaque. In the hidden browser pane, animations were paused.
 
-## Message 17
+---
 
-**My message:** "Yes, push". `d58cb1c` was pushed, and GitHub's `main` matched the local branch.
-
-## Message 18
-
-**My message:** "Yes, guide me". The agent opened vercel.com/new in my Chrome. I imported the repo, passed Vercel's identity check, added `VITE_OWM_KEY` and `VITE_RAPIDAPI_KEY` as Vercel environment variables, and deployed.
-
-## Message 19 (with a screenshot of the deployed app)
+## Prompt 8: current location (with a screenshot of the deployed app)
 
 **My message:** "Current location bhi mangna chiye tha na us ki basis par weather show honi chiye"
 
 (Translation: "Shouldn't it also ask for the current location, and show the weather based on that?")
-
-Then, while the agent was working: the live URL, `https://weather-app-eight-mu-26.vercel.app/`.
 
 **Agent actions:**
 
 - Noted that geolocation is not in the brief, then built it as an extra.
 - **Behaviour.** A "Use my current location" button; permission is asked only when it is pressed. The name comes from OpenWeatherMap reverse geocoding: curl returned 200 "Lahore, Punjab, PK" for Lahore's coordinates. Blocked, insecure, unavailable and timeout each have their own inline message.
 - **Checked:** the denied path in the browser pane (permission `denied` showed the blocked message and the weather on screen stayed). The allowed path needs a person to click Allow in Chrome's prompt, so it was left for me to check on the live site.
-- Put the live URL in README.
 
-## Message 20 (with a screenshot, the hero illustration circled)
+---
+
+## Prompt 9: more attractive weather icons (with a screenshot, the hero illustration circled)
 
 **My message:** "ye icons bhi thode attractive banao" (Translation: "make these icons a bit more attractive too")
 
@@ -356,24 +298,9 @@ Then, while the agent was working: "look for the weather of normal to worse to c
 - **Checked every condition, mild to severe.** Live weather can't be chosen, so a throwaway gallery (not in the repo) rendered all 8 conditions × day/night with the real components and CSS. It was viewed in light and dark mode. It showed that rain, drizzle and snow were too small and were crossed by the orbit line. The cloud was lifted and the drops and flakes made bigger, then the gallery was checked again.
 - Rain, as live weather in Karawala, Nicaragua, was also checked in my Chrome, where the animation runs.
 
-## Message 21
+---
 
-**My message:** "Yes, push"
-
-**Agent actions:**
-
-- Pushed `449347d`, then waited until the live site served the same bundle as the local build (`index-BZPmQ8eO.js`, about 20 s after the push).
-- Checked the live URL in the browser pane:
-  - manifest: `WeatherBoard`, `standalone`, `#172324`, 192, 512 and maskable icons
-  - service worker active and controlling the page, 14 files precached
-  - searching "Karachi" called GeoDB `/v1/geo/cities` (200); picking it called OpenWeatherMap `/weather` and `/forecast` (200)
-  - no horizontal scroll at 375, 768 or 1280 px, and no control under 44 px on mobile
-- **Left for me to check on the live site:**
-  - allowing location
-  - offline startup
-  - notifications: my Chrome had notifications blocked for the new vercel.app domain
-
-## Message 22
+## Prompt 10: final requirement audit
 
 **My message (written in Hindi script; translation):** "Check one final thing: whether every requirement they gave is fulfilled or something is missing. If everything is fulfilled, tell me. Also give me PROMPTS.md here so I can read it once; after that I'll send this file along with both links, the live one and the GitHub one."
 
@@ -386,3 +313,30 @@ Then, while the agent was working: "look for the weather of normal to worse to c
   - the README and this file now say plainly that Claude Code was used instead of Cursor, Antigravity or OpenCode
   - a code comment still claimed "< 300 ms"
 - Re-ran type-check, tests and build.
+- **Live site checked after the last code push:**
+  - manifest: `WeatherBoard`, `standalone`, `#172324`, 192, 512 and maskable icons
+  - service worker active and controlling the page, 14 files precached
+  - searching "Karachi" called GeoDB `/v1/geo/cities` (200); picking it called OpenWeatherMap `/weather` and `/forecast` (200)
+  - no horizontal scroll at 375, 768 or 1280 px, and no control under 44 px on mobile
+- **Left for me to check on the live site:**
+  - allowing location
+  - offline startup
+  - notifications: my Chrome had notifications blocked for the new vercel.app domain
+
+---
+
+## Routine messages
+
+In order, one line each. These ran the project; they didn't change what the app does.
+
+1. Chose "IDE ke liye plan (Recommended)" (a plan for another IDE). The agent wrote `WEATHERBOARD_PLAN.md` (git-ignored notes).
+2. "We are using CLAUDE". The agent asked whether I meant a Claude model in another editor or Claude Code. My answer is Prompt 2.
+3. "Yes, use Chrome", to run the reminder test in my real Chrome (results under Prompt 3).
+4. "Done, screenshot sent", for the offline test (results under Prompt 4).
+5. Asked the agent to open the OpenWeatherMap and RapidAPI pages in Chrome. I signed up, created the keys and put them in `.env` myself. The agent created the empty `.env` and checked only the key lengths.
+6. "DONE", plus screenshots of the key pages. The agent pointed out that my OpenWeatherMap email was unconfirmed and that GeoDB needed the free Basic plan; I subscribed (results under "Prompt 3, continued").
+7. "Yes, commit now". The agent ran `git init` and made the first commit after checking that no file contained a real key.
+8. Sent the GitHub repo URL. The agent pushed and confirmed that the repo was public and `.env` was not in it.
+9. "Yes, push" (four times, after Prompts 6, 7, 9 and 10).
+10. "Yes, guide me". The agent opened Vercel; I imported the repo, added the two keys as environment variables and deployed. I then sent the live URL.
+11. Asked for this file to keep the prompts about the app in full and shorten routine messages like these.
