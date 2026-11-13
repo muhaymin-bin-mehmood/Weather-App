@@ -1,0 +1,24 @@
+# Dependencies and build output
+node_modules
+dist
+dist-*
+dev-dist
+coverage
+
+# Secrets: only .env.example (placeholders) is committed
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Tooling / local
+.vercel
+.claude/
+*.log
+.DS_Store
+Thumbs.db
+
+# Personal working notes
+WEATHERBOARD_PLAN.md
+*.tsbuildinfo
