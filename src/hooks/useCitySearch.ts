@@ -4,7 +4,11 @@ import { isAbort, toApiError, type ApiError } from '../api/errors';
 import { validateCityQuery } from '../lib/validation';
 import type { City } from '../types';
 
-/** Short enough to feel instant (< 300 ms after the user pauses), long enough to skip keystrokes. */
+/**
+ * Waits for a short pause before searching, so fast typing sends one request
+ * instead of one per key. The total delay is this plus GeoDB's own response
+ * time (measured 650–920 ms), so the brief's 300 ms target is not met; see README.
+ */
 export const SEARCH_DEBOUNCE_MS = 250;
 
 export interface CitySearchState {

@@ -100,13 +100,15 @@ src/
     openWeather.ts  OWM current + 3-hourly forecast → daily
     openMeteo.ts    Open-Meteo → same shape
     weather.ts      OWM first, Open-Meteo fallback
-    cities.ts       GeoDB (rate-gated) with Open-Meteo geocoding fallback
+    cities.ts       GeoDB (rate-gated, optional country) + Open-Meteo merge/fallback
+    geolocate.ts    browser geolocation + OWM reverse geocoding
     conditions.ts   OWM ids / WMO codes → our ConditionKind (shared with SW)
   hooks/          useCitySearch, useWeather, useFavourites, useSettings, useOnline, useInstallPrompt
   reminder/       schedule.ts (pure timing), store.ts (IndexedDB), message.ts, useReminder.ts
-  components/     CitySearch, WeatherView, Favourites, ReminderCard, ConfirmDialog, WeatherIcon, Chrome
-  lib/            storage (never throws), format, validation
-  sw.ts           precache + navigation fallback, periodicsync, notificationclick
+  components/     CitySearch, WeatherView, Favourites, ReminderCard, ConfirmDialog,
+                  Select (styled accessible dropdown), TimePicker, WeatherIcon (icons + hero art), Chrome
+  lib/            storage (never throws), format, validation, outlook (copy + sky), countries
+  sw.ts           precache (+ self-repair) + navigation fallback, periodicsync, notificationclick
 ```
 
 **Data flow:** `CitySearch` → `onSelect(city)` → `App` stores it as the last city → `useWeather(city)` shows the saved snapshot straight away if it has one, fetches through `getWeather`, and saves the result as the new snapshot. The UI only ever sees one normalised `WeatherData` type, so it never knows which provider answered.
@@ -171,6 +173,10 @@ Page and service worker share one notification `tag` and a "shown today" date, s
 - A scheduled function (for example Vercel Cron or a Cloudflare Worker cron) that runs every few minutes and sends a `web-push` message to everyone whose local reminder time just passed.
 - A `push` handler in `sw.ts` that shows the notification.
 
+### Autocomplete is about 1 s, not 300 ms
+
+The brief asks for suggestions within 300 ms of a pause. Measured against the real GeoDB free plan, they arrive 0.9–1.2 s after the last key, because GeoDB itself takes 650–920 ms to answer and allows only 1 request per second. Repeated queries come from an in-memory cache in about 11 ms. Details and the fix that would need a backend are under [Key decisions](#key-decisions).
+
 ### Other
 
 - **API keys are in the client bundle.** With no backend there is nowhere else to put them. In production they would sit behind a small proxy with caching and rate limiting. Both keys are free-tier and limited by their providers.
@@ -180,11 +186,11 @@ Page and service worker share one notification `tag` and a "shown today" date, s
 
 ## APIs used
 
-- [OpenWeatherMap](https://openweathermap.org/api): `/data/2.5/weather`, `/data/2.5/forecast`
+- [OpenWeatherMap](https://openweathermap.org/api): `/data/2.5/weather`, `/data/2.5/forecast`, and `/geo/1.0/reverse` (naming "Use my current location")
 - [Open-Meteo](https://open-meteo.com/): `/v1/forecast` (fallback weather, and the service worker's reminder fetch) and the geocoding API (search fallback)
-- [GeoDB Cities](https://rapidapi.com/wirefreethought/api/geodb-cities): `/v1/geo/cities` via RapidAPI
-- Browser: Notifications API, Service Worker, Periodic Background Sync, IndexedDB, Web App Manifest
+- [GeoDB Cities](https://rapidapi.com/wirefreethought/api/geodb-cities): `/v1/geo/cities` via RapidAPI (with `countryIds` when a country is picked)
+- Browser: Notifications API, Service Worker, Periodic Background Sync, Geolocation API, IndexedDB, Web App Manifest, `Intl.DisplayNames` (country names)
 
 ## How this was built
 
-With **Claude Code** (Anthropic's agentic coding tool, desktop app) and Claude Opus 5.5. The full prompt history and what was corrected along the way is in [PROMPTS.md](PROMPTS.md).
+With **Claude Code** (Anthropic's agentic coding tool, desktop app) and Claude Opus 5.5. The brief asks for Cursor, Antigravity or OpenCode as the primary tool; this project used Claude Code instead, and that is stated here rather than relabelled. The full prompt history and what was corrected along the way is in [PROMPTS.md](PROMPTS.md).

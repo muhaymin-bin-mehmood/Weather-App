@@ -3,6 +3,8 @@
 **Tool:** Claude Code (desktop app)
 **Model:** Claude Opus 5.5
 
+**Note on the tool.** The brief asks for Cursor, Antigravity or OpenCode as the primary development tool. I used Claude Code instead. This file records what actually happened rather than naming a different tool.
+
 ## How to read this file
 
 Every message I sent to the agent is listed in order. Each entry keeps these parts apart:
@@ -353,3 +355,34 @@ Then, while the agent was working: "look for the weather of normal to worse to c
 - Forecast icons became duotone: tinted sun core, tinted moon, teal rain.
 - **Checked every condition, mild to severe.** Live weather can't be chosen, so a throwaway gallery (not in the repo) rendered all 8 conditions × day/night with the real components and CSS. It was viewed in light and dark mode. It showed that rain, drizzle and snow were too small and were crossed by the orbit line. The cloud was lifted and the drops and flakes made bigger, then the gallery was checked again.
 - Rain, as live weather in Karawala, Nicaragua, was also checked in my Chrome, where the animation runs.
+
+## Message 21
+
+**My message:** "Yes, push"
+
+**Agent actions:**
+
+- Pushed `449347d`, then waited until the live site served the same bundle as the local build (`index-BZPmQ8eO.js`, about 20 s after the push).
+- Checked the live URL in the browser pane:
+  - manifest: `WeatherBoard`, `standalone`, `#172324`, 192, 512 and maskable icons
+  - service worker active and controlling the page, 14 files precached
+  - searching "Karachi" called GeoDB `/v1/geo/cities` (200); picking it called OpenWeatherMap `/weather` and `/forecast` (200)
+  - no horizontal scroll at 375, 768 or 1280 px, and no control under 44 px on mobile
+- **Left for me to check on the live site:**
+  - allowing location
+  - offline startup
+  - notifications: my Chrome had notifications blocked for the new vercel.app domain
+
+## Message 22
+
+**My message (written in Hindi script; translation):** "Check one final thing: whether every requirement they gave is fulfilled or something is missing. If everything is fulfilled, tell me. Also give me PROMPTS.md here so I can read it once; after that I'll send this file along with both links, the live one and the GitHub one."
+
+**Agent actions:**
+
+- Audited every requirement in the PDF against the code and the live site.
+- **Fixed stale docs:**
+  - the README architecture tree was missing the new files
+  - the ~1 s autocomplete timing is now also listed under Known limitations
+  - the README and this file now say plainly that Claude Code was used instead of Cursor, Antigravity or OpenCode
+  - a code comment still claimed "< 300 ms"
+- Re-ran type-check, tests and build.
