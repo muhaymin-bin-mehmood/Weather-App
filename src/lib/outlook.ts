@@ -72,3 +72,25 @@ export function longDate(date: string): string {
     timeZone: 'UTC',
   });
 }
+
+/** Background mood for the page, from the current reading. */
+export type Sky = 'clear-day' | 'clear-night' | 'cloudy' | 'fog' | 'rain' | 'storm' | 'snow';
+
+export function skyFor(condition: ConditionKind, isDay: boolean): Sky {
+  switch (condition) {
+    case 'clear':
+    case 'partly-cloudy':
+      return isDay ? 'clear-day' : 'clear-night';
+    case 'cloudy':
+      return 'cloudy';
+    case 'fog':
+      return 'fog';
+    case 'drizzle':
+    case 'rain':
+      return 'rain';
+    case 'thunder':
+      return 'storm';
+    case 'snow':
+      return 'snow';
+  }
+}

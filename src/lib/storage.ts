@@ -87,5 +87,6 @@ export const KEYS = {
   lastCity: 'wb:lastCity',
   lastWeather: 'wb:lastWeather',
   settings: 'wb:settings',
+  searchCountry: 'wb:searchCountry',
   storageNoticeDismissed: 'wb:storageNoticeDismissed',
 } as const;

@@ -10,6 +10,7 @@ import { useFavourites } from './hooks/useFavourites';
 import { useOnline } from './hooks/useOnline';
 import { useSettings } from './hooks/useSettings';
 import { loadSnapshot, useWeather } from './hooks/useWeather';
+import { skyFor } from './lib/outlook';
 import { KEYS, storage } from './lib/storage';
 import type { City } from './types';
 
@@ -78,7 +79,10 @@ export function App() {
   const showingSnapshot = Boolean(snapshot && state.data && isSameCity(snapshot.city, state.data.city));
 
   return (
-    <div className="app">
+    <div
+      className="app"
+      data-sky={state.data ? skyFor(state.data.current.condition, state.data.current.isDay) : undefined}
+    >
       <div className="sheet">
       <a href="#main" className="skip-link">
         Skip to weather

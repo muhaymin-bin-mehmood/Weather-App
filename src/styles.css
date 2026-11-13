@@ -199,6 +199,42 @@ svg {
   }
 }
 
+/* ---------- Weather-tinted background ----------
+ * A quiet wash that follows the current conditions. It changes the page
+ * around the sheet and a soft band at the top of the sheet; the text sits on
+ * the normal surface, so contrast is the same in every sky. */
+.app {
+  --sky: transparent;
+  background:
+    radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--sky) 34%, transparent), transparent 70%),
+    var(--page);
+  transition: background-color 0.6s ease;
+}
+.sheet {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--sky) 13%, transparent) 0, transparent 360px);
+}
+.app[data-sky='clear-day'] {
+  --sky: #f0a64a;
+}
+.app[data-sky='clear-night'] {
+  --sky: #3f5f93;
+}
+.app[data-sky='cloudy'] {
+  --sky: #8c9a99;
+}
+.app[data-sky='fog'] {
+  --sky: #b2ab9c;
+}
+.app[data-sky='rain'] {
+  --sky: #3f7c8f;
+}
+.app[data-sky='storm'] {
+  --sky: #5d4b86;
+}
+.app[data-sky='snow'] {
+  --sky: #9fc3e3;
+}
+
 /* ---------- Header ---------- */
 .topbar {
   display: flex;
@@ -471,6 +507,41 @@ svg {
 .search {
   position: relative;
 }
+.country-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.country-row label {
+  flex: none;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.country-select {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 36px 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--field)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%237f8a88' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 14px center;
+  color: var(--text);
+  font: inherit;
+  appearance: none;
+}
+.country-select:focus {
+  outline: none;
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ember) 28%, transparent);
+}
+.country-select:disabled {
+  opacity: 0.6;
+}
 .search-field {
   position: relative;
   display: flex;
@@ -524,7 +595,7 @@ svg {
   z-index: 20;
   left: 0;
   right: 0;
-  top: 52px;
+  top: 106px; /* country row (44 + 10) + search field (48) + 4 */
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);

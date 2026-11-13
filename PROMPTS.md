@@ -242,3 +242,43 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
   - a repeated query came from the cache in 11 ms
   - The 300 ms target is not met; README explains why.
 - **Weather.** Picking Lahore sent OpenWeatherMap `/weather` 401 and `/forecast` 401, then Open-Meteo `/v1/forecast` 200, and the card showed "Open-Meteo". OpenWeatherMap as the primary source is still unverified until the key activates.
+
+## Message 12
+
+**My message:** "Yes, commit now"
+
+**Agent actions:** ran `git init` on `main`. Moved `tsconfig.tsbuildinfo` into `.gitignore`. Checked that no staged file contains either real key from `.env`, then made the first commit (`6a39c01`).
+
+## Message 13
+
+**My message:** the repo URL, `https://github.com/muhaymin-bin-mehmood/Weather-App`
+
+**Agent actions:** added the remote, confirmed it was empty, and pushed `main`. Then confirmed that GitHub's `main` matched the local commit, that the repo page is public (200), and that `.env` is not on GitHub (404).
+
+## Message 14
+
+**My message:**
+
+> Just do 1 more thing make the background changes based on the weather the city or the country has and the app should have both country and the city dropdown but before that check if it;s in the desired document requirement or not
+
+**Agent actions:**
+
+- Re-read the PDF. Neither feature is required.
+  - The background is not mentioned; it is harmless polish.
+  - Replacing the search with two dropdowns would break requirement 01 (live suggestions as the user types). The agent proposed an optional country filter alongside the autocomplete instead.
+  - It also noticed the new design had not been checked at the brief's exact 1280 px width.
+
+**My message:** "Then do both as an extra thing"
+
+**Agent actions:**
+
+- **Background.** `skyFor()` maps condition and day/night to seven skies. CSS tints the page and the top of the sheet only, so text contrast is unchanged.
+- **Country filter.** A select with all ISO countries (names from `Intl.DisplayNames`, no API call). It defaults to "All countries", is remembered, and sends `countryIds` to GeoDB and `countryCode` to Open-Meteo. The placeholder and the no-results message name the country.
+- **Checked in the browser** at 1280 px light and 375 px dark: no horizontal scroll and no control under 44 px.
+  - "Hyder" with Pakistan sent `countryIds=PK` and `countryCode=PK`.
+  - "Lahore" with United Kingdom showed "No cities match “Lahore” in United Kingdom."
+- **Two issues found by that test:**
+  - "Hyderābād" and "Hyderabad" were not treated as the same place. Names are now compared without accents, and duplicates within one source are removed.
+  - Five "Hyderabad" rows looked like duplicates but were real villages in different districts. The district is now shown when the name and province match.
+- **OpenWeatherMap key now active.** Picking Hyderabad sent `/weather` 200 and `/forecast` 200, and the card showed "OpenWeatherMap".
+- Tests: 38/38 passing (5 new).

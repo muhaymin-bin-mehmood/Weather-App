@@ -33,6 +33,26 @@ describe('GeoDB thin-result merge', () => {
     expect(merged[1].id).toBe('geodb:3436378'); // GeoDB's entry wins the tie
   });
 
+  it('treats accented and plain spellings as one place, and dedupes within a source', () => {
+    const geo = [
+      c('geodb:1', 'Hyderabad', 'PK', 25.39, 68.37, 1_732_693),
+      c('geodb:2', 'Hyderabad', 'PK', 25.4, 68.36, 0),
+    ];
+    const om = [c('om:1', 'Hyderābād', 'PK', 25.39, 68.37, 1_386_330)];
+    expect(mergeCandidates(geo, om).map((m) => m.id)).toEqual(['geodb:1']);
+  });
+
+  it('names the district when same-named places share a province', () => {
+    const om: Candidate[] = [
+      { ...c('om:1', 'Hyderabad', 'PK', 31.35, 71.7, 0), district: 'Bhakkar District' },
+      { ...c('om:2', 'Hyderabad', 'PK', 29.78, 71.89, 0), district: 'Lodhran District' },
+    ].map((x) => ({ ...x, city: { ...x.city, region: 'Punjab' } }));
+    expect(mergeCandidates([], om).map((m) => m.region)).toEqual([
+      'Bhakkar District, Punjab',
+      'Lodhran District, Punjab',
+    ]);
+  });
+
   it('returns at most five', () => {
     const many = Array.from({ length: 8 }, (_, i) => c(`om:${i}`, `Town ${i}`, 'PK', i, i, i * 1000));
     expect(mergeCandidates([], many)).toHaveLength(5);

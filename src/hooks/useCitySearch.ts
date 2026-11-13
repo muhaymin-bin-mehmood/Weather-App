@@ -18,7 +18,7 @@ export interface CitySearchState {
 
 const IDLE: CitySearchState = { status: 'idle', cities: [], source: null, error: null, query: '' };
 
-export function useCitySearch(query: string, enabled: boolean) {
+export function useCitySearch(query: string, enabled: boolean, country = '') {
   const [state, setState] = useState<CitySearchState>(IDLE);
   const [retryToken, setRetryToken] = useState(0);
   const cache = useRef(new Map<string, { cities: City[]; source: CitySource }>());
@@ -29,7 +29,7 @@ export function useCitySearch(query: string, enabled: boolean) {
       setState(IDLE);
       return;
     }
-    const key = q.toLowerCase();
+    const key = `${country}|${q.toLowerCase()}`;
     const cached = cache.current.get(key);
     if (cached) {
       setState({ status: 'success', ...cached, error: null, query: q });
@@ -41,7 +41,7 @@ export function useCitySearch(query: string, enabled: boolean) {
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const result = await searchCities(q, controller.signal);
+        const result = await searchCities(q, controller.signal, country || undefined);
         cache.current.set(key, result);
         setState({ status: 'success', ...result, error: null, query: q });
       } catch (err) {
@@ -54,7 +54,7 @@ export function useCitySearch(query: string, enabled: boolean) {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query, enabled, retryToken]);
+  }, [query, enabled, country, retryToken]);
 
   return { ...state, retry: () => setRetryToken((t) => t + 1) };
 }

@@ -18,7 +18,7 @@ A responsive, installable weather dashboard. Search any city, see current condit
 | PWA | Manifest (192/512 + maskable icons, `display: standalone`, `theme_color`), Workbox-precached app shell, "Install app" button, "new version available → Reload" prompt. |
 | Offline | The last viewed city's full forecast is saved after every successful load. Offline, the app opens from the cache, shows that city and an offline banner with the time of the data, and disables search with a reason. It refreshes on its own when the connection returns. |
 | Daily reminder | User picks a time. An explanation comes **before** the browser's permission prompt. Unsupported, denied and iOS-not-installed states are handled without breaking anything else. **On time while the app is open; best-effort or unavailable when it is closed.** See [limitations](#known-limitations). |
-| Responsive | Checked at 375, 768, 1024 and 1568 px: no horizontal scroll, touch targets ≥ 44 × 44 px. On phones the 5-day forecast becomes a list; the hero and forecast switch layout with container queries, not just viewport width. |
+| Responsive | Checked at 375, 768, 1024, 1280 and 1568 px: no horizontal scroll, touch targets ≥ 44 × 44 px. On phones the 5-day forecast becomes a list; the hero and forecast switch layout with container queries, not just viewport width. |
 | Bonus | °C/°F toggle (persisted, converts at render time with no refetch), light/dark/system theme (persisted, applied before first paint), line-art weather icons, a short outlook line written from the live reading, and motion that respects `prefers-reduced-motion`. |
 
 ## Design
@@ -33,6 +33,13 @@ The brand direction is **"A little clarity. Every day."**
 | Layout | Large temperatures, fine dividers and few boxes. Light mode is a warm editorial page; dark mode uses Ink and Night. |
 
 The outlook copy ("A calm, clear night." and the sentence under it) is generated from the current condition, day or night, wind speed, feels-like temperature and humidity in `src/lib/outlook.ts`. It never says more than the data does.
+
+### Extras beyond the brief
+
+These two were added on request after the core requirements were done. Neither is in the Edspire brief.
+
+- **Weather-tinted background.** The page around the sheet, and a soft band at its top, take a colour from the current conditions: warm for a clear day, blue for a clear night, grey for cloud, sand for fog, teal for rain, violet for storms, pale blue for snow. All text stays on the normal surface colour, so contrast does not change. The mapping is `skyFor()` in `src/lib/outlook.ts`.
+- **Optional country filter.** A "Country" select sits above the city search. Its default is "All countries", and the choice is remembered. It narrows the same live autocomplete (GeoDB `countryIds`, Open-Meteo `countryCode`); it does not replace it, because requirement 01 asks for suggestions as the user types. The country list ships with the app (ISO codes, with names from the browser's `Intl.DisplayNames`). Fetching it from GeoDB's `/countries` would spend the 1 request/second budget and fail offline. When several places share a name and province (Pakistan has a "Hyderabad" in at least four Punjab and Sindh districts), the district is added to the suggestion so they don't look like duplicates.
 
 ## Setup
 

@@ -2,6 +2,8 @@ import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent 
 import { formatCity } from '../api/cities';
 import { userMessage } from '../api/errors';
 import { useCitySearch } from '../hooks/useCitySearch';
+import { countries, countryName } from '../lib/countries';
+import { KEYS, storage } from '../lib/storage';
 import { validateCityQuery } from '../lib/validation';
 import type { City } from '../types';
 import { Icon } from './Icon';
@@ -18,6 +20,7 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
   const listId = `${id}-list`;
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
+  const countryId = `${id}-country`;
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [value, setValue] = useState('');
@@ -29,8 +32,14 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
   /** Text submitted with Enter before its suggestions had loaded. */
   const [pendingQuery, setPendingQuery] = useState<string | null>(null);
 
+  /** Optional filter: '' means all countries. Remembered between visits. */
+  const [country, setCountry] = useState(() =>
+    storage.get<string>(KEYS.searchCountry, '', (v): v is string => typeof v === 'string' && /^([A-Z]{2})?$/.test(v)),
+  );
+  const inCountry = country ? ` in ${countryName(country)}` : '';
+
   const disabled = Boolean(disabledReason);
-  const search = useCitySearch(value, !selected && !disabled);
+  const search = useCitySearch(value, !selected && !disabled, country);
   const trimmed = value.trim();
   const queryValid = validateCityQuery(trimmed) === null;
   const resultsAreCurrent = search.query.toLowerCase() === trimmed.toLowerCase();
@@ -57,7 +66,9 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
       return `${msg.title} ${msg.hint}`;
     }
     if (resultsAreCurrent && search.status === 'success' && options.length === 0) {
-      return `No cities match “${trimmed}”. Check the spelling or try a nearby larger city.`;
+      return country
+        ? `No cities match “${trimmed}”${inCountry}. Check the spelling, or set Country to “All countries”.`
+        : `No cities match “${trimmed}”. Check the spelling or try a nearby larger city.`;
     }
     return 'Pick a city from the list so we know which one you mean.';
   };
@@ -145,11 +156,35 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
       : search.status === 'success' && resultsAreCurrent
         ? options.length
           ? `${options.length} ${options.length === 1 ? 'city' : 'cities'} found. Use the arrow keys to choose.`
-          : `No cities match ${trimmed}.`
+          : `No cities match ${trimmed}${inCountry}.`
         : '';
 
   return (
     <form className="search" onSubmit={onSubmit} noValidate role="search">
+      <div className="country-row">
+        <label htmlFor={countryId}>Country</label>
+        <select
+          id={countryId}
+          className="country-select"
+          value={country}
+          disabled={disabled}
+          onChange={(e) => {
+            const next = e.target.value;
+            setCountry(next);
+            storage.set(KEYS.searchCountry, next);
+            // A city picked under the old filter stays shown; typing again searches the new country.
+            setActive(-1);
+            if (error) setError(null);
+          }}
+        >
+          <option value="">All countries</option>
+          {countries().map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
       <label htmlFor={inputId} className="sr-only">
         Search a city
       </label>
@@ -171,7 +206,7 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="search"
-            placeholder={disabled ? 'Offline — search paused' : 'Search a city'}
+            placeholder={disabled ? 'Offline — search paused' : country ? `Search a city in ${countryName(country)}` : 'Search a city'}
             value={value}
             disabled={disabled}
             onChange={(e) => {
@@ -243,8 +278,12 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
           ) : search.status === 'success' && options.length === 0 ? (
             <div className="suggestions-message">
               <div>
-                <strong>No cities match “{trimmed}”.</strong>
-                <span>Check the spelling or try a nearby larger city.</span>
+                <strong>
+                  No cities match “{trimmed}”{inCountry}.
+                </strong>
+                <span>
+                  {country ? 'Check the spelling, or set Country to “All countries”.' : 'Check the spelling or try a nearby larger city.'}
+                </span>
               </div>
             </div>
           ) : null}

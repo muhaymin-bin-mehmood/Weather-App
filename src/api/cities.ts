@@ -25,6 +25,7 @@ interface OpenMeteoGeoResult {
   id: number;
   name: string;
   admin1?: string;
+  admin2?: string;
   country?: string;
   country_code?: string;
   latitude: number;
@@ -39,6 +40,8 @@ export type CitySource = 'geodb' | 'open-meteo' | 'mixed';
 export interface Candidate {
   city: City;
   population: number;
+  /** Second-level area (e.g. "Sanghar District"), used only to tell same-named places apart. */
+  district?: string;
 }
 
 const MAX_SUGGESTIONS = 5;
@@ -56,9 +59,14 @@ export function isThin(results: Candidate[]): boolean {
   return results.length < THIN_COUNT || Math.max(0, ...results.map((r) => r.population)) < THIN_TOP_POPULATION;
 }
 
+/** "Hyderābād" and "Hyderabad" are the same name for matching purposes. */
+function plainName(name: string): string {
+  return name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+
 function samePlace(a: City, b: City): boolean {
   return (
-    a.name.toLowerCase() === b.name.toLowerCase() &&
+    plainName(a.name) === plainName(b.name) &&
     a.countryCode.toUpperCase() === b.countryCode.toUpperCase() &&
     Math.abs(a.lat - b.lat) < 0.5 &&
     Math.abs(a.lon - b.lon) < 0.5
@@ -67,13 +75,27 @@ function samePlace(a: City, b: City): boolean {
 
 /** Merge, drop duplicates (GeoDB's entry wins), largest population first. */
 export function mergeCandidates(primary: Candidate[], extra: Candidate[]): City[] {
-  const merged = [...primary];
-  for (const c of extra) if (!merged.some((m) => samePlace(m.city, c.city))) merged.push(c);
+  const merged: Candidate[] = [];
+  // Also catches duplicates inside one source (GeoDB can list a city twice).
+  for (const c of [...primary, ...extra]) if (!merged.some((m) => samePlace(m.city, c.city))) merged.push(c);
   return merged
     .map((c, i) => ({ ...c, i }))
     .sort((a, b) => b.population - a.population || a.i - b.i)
     .slice(0, MAX_SUGGESTIONS)
-    .map((c) => c.city);
+    .map((c, _i, list) => {
+      // Several villages can share a name and province ("Hyderabad, Punjab" ×3);
+      // add the district so the list doesn't look like duplicates.
+      const ambiguous = list.some(
+        (o) =>
+          o !== c &&
+          plainName(o.city.name) === plainName(c.city.name) &&
+          o.city.region === c.city.region &&
+          o.city.countryCode === c.city.countryCode,
+      );
+      return ambiguous && c.district && c.district !== c.city.region
+        ? { ...c.city, region: [c.district, c.city.region].filter(Boolean).join(', ') }
+        : c.city;
+    });
 }
 
 export interface CitySearchResult {
@@ -107,13 +129,14 @@ async function geoDbGate(signal?: AbortSignal): Promise<void> {
   lastGeoDbRequestAt = Date.now();
 }
 
-async function searchGeoDb(query: string, signal?: AbortSignal): Promise<Candidate[]> {
+async function searchGeoDb(query: string, signal?: AbortSignal, country?: string): Promise<Candidate[]> {
   const params = new URLSearchParams({
     namePrefix: query,
     limit: '5',
     sort: '-population',
     types: 'CITY',
   });
+  if (country) params.set('countryIds', country);
   const request = async () => {
     await geoDbGate(signal);
     return fetchJson<{ data?: GeoDbCity[] }>(`https://${GEODB_HOST}/v1/geo/cities?${params}`, GEODB_SERVICE, {
@@ -146,8 +169,9 @@ async function searchGeoDb(query: string, signal?: AbortSignal): Promise<Candida
   }));
 }
 
-async function searchOpenMeteoGeo(query: string, signal?: AbortSignal): Promise<Candidate[]> {
+async function searchOpenMeteoGeo(query: string, signal?: AbortSignal, country?: string): Promise<Candidate[]> {
   const params = new URLSearchParams({ name: query, count: '5', language: 'en', format: 'json' });
+  if (country) params.set('countryCode', country);
   const res = await fetchJson<{ results?: OpenMeteoGeoResult[] }>(
     `https://geocoding-api.open-meteo.com/v1/search?${params}`,
     'Open-Meteo Geocoding',
@@ -155,6 +179,7 @@ async function searchOpenMeteoGeo(query: string, signal?: AbortSignal): Promise<
   );
   return (res.results ?? []).map((c) => ({
     population: c.population ?? 0,
+    district: c.admin2 || undefined,
     city: {
       id: `om:${c.id}`,
       name: c.name,
@@ -187,7 +212,8 @@ const COOL_DOWN_MS: Partial<Record<string, number>> = {
   'rate-limit': 5_000,
 };
 
-export async function searchCities(query: string, signal?: AbortSignal): Promise<CitySearchResult> {
+/** `country` is an optional ISO 3166-1 alpha-2 code that narrows both sources. */
+export async function searchCities(query: string, signal?: AbortSignal, country?: string): Promise<CitySearchResult> {
   if (RAPIDAPI_KEY && Date.now() >= geoDbSkipUntil) {
     // Open-Meteo is keyless and has no rate limit, so it starts alongside GeoDB.
     // Its answer is only used if GeoDB's list is thin (or GeoDB fails), and the
@@ -196,13 +222,13 @@ export async function searchCities(query: string, signal?: AbortSignal): Promise
     const backup = new AbortController();
     const onAbort = () => backup.abort();
     signal?.addEventListener('abort', onAbort, { once: true });
-    const backupResult = searchOpenMeteoGeo(query, backup.signal);
+    const backupResult = searchOpenMeteoGeo(query, backup.signal, country);
     backupResult.catch(() => undefined); // avoid an unhandled rejection when it is not needed
     const done = () => signal?.removeEventListener('abort', onAbort);
 
     let geo: Candidate[] | null = null;
     try {
-      geo = await searchGeoDb(query, signal);
+      geo = await searchGeoDb(query, signal, country);
     } catch (err) {
       const apiErr = toApiError(err);
       if (isAbort(err) || apiErr.kind === 'offline') {
@@ -217,7 +243,7 @@ export async function searchCities(query: string, signal?: AbortSignal): Promise
       if (geo) {
         if (!isThin(geo)) {
           backup.abort();
-          return { cities: geo.map((c) => c.city), source: 'geodb' };
+          return { cities: mergeCandidates(geo, []), source: 'geodb' };
         }
         try {
           const cities = mergeCandidates(geo, await backupResult);
@@ -228,12 +254,12 @@ export async function searchCities(query: string, signal?: AbortSignal): Promise
           return { cities: geo.map((c) => c.city), source: 'geodb' }; // GeoDB's answer still stands
         }
       }
-      return { cities: (await backupResult).map((c) => c.city), source: 'open-meteo' };
+      return { cities: mergeCandidates([], await backupResult), source: 'open-meteo' };
     } finally {
       done();
     }
   }
-  return { cities: (await searchOpenMeteoGeo(query, signal)).map((c) => c.city), source: 'open-meteo' };
+  return { cities: mergeCandidates([], await searchOpenMeteoGeo(query, signal, country)), source: 'open-meteo' };
 }
 
 export function formatCity(city: City): string {
