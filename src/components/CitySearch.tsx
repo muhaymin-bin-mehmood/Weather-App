@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { formatCity } from '../api/cities';
+import { LocateError, locateMe, locateMessage } from '../api/geolocate';
 import { userMessage } from '../api/errors';
 import { useCitySearch } from '../hooks/useCitySearch';
 import { countries, countryName } from '../lib/countries';
@@ -42,6 +43,23 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
     storage.get<string>(KEYS.searchCountry, '', (v): v is string => typeof v === 'string' && /^([A-Z]{2})?$/.test(v)),
   );
   const inCountry = country ? ` in ${countryName(country)}` : '';
+
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
+  const locateErrorId = `${id}-locate-error`;
+
+  const useMyLocation = async () => {
+    setLocateError(null);
+    setError(null);
+    setLocating(true);
+    try {
+      choose(await locateMe());
+    } catch (err) {
+      setLocateError(locateMessage(err instanceof LocateError ? err.kind : 'unavailable'));
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const disabled = Boolean(disabledReason);
   const search = useCitySearch(value, !selected && !disabled, country);
@@ -250,6 +268,23 @@ export function CitySearch({ onSelect, disabledReason }: Props) {
             ? `Looking up “${pendingQuery}”… the top match will open as soon as it’s found.`
             : 'Type at least 2 letters, then choose a city from the suggestions.')}
       </p>
+
+      <button
+        type="button"
+        className="text-button locate-button"
+        onClick={useMyLocation}
+        disabled={disabled || locating}
+        aria-describedby={locateError ? locateErrorId : undefined}
+      >
+        <Icon name="locate" size={16} />
+        {locating ? 'Finding your location…' : 'Use my current location'}
+      </button>
+      {locateError ? (
+        <p id={locateErrorId} className="field-error" role="alert">
+          <Icon name="alert" size={16} />
+          {locateError}
+        </p>
+      ) : null}
 
       <div className="sr-only" aria-live="polite">
         {showList ? statusText : ''}

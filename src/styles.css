@@ -36,6 +36,16 @@
   --danger: #b42318;
   --warning-bg: #f6e7d3;
   --icon-fill: var(--surface);
+  /* Illustration fills */
+  --cloud-fill: #ffffff;
+  --cloud-back: #d3dfda;
+  --cloud-shade: #e2eae7;
+  --cloud-storm: #cdd2da;
+  --cloud-tint: #e6eeeb;
+  --moon-fill: #fbf0d3;
+  --moon-crater: #eadbb2;
+  --moon-tint: #f7ecd0;
+  --rain: #3f7c8f;
   --shadow: 0 1px 2px rgba(23, 35, 36, 0.05), 0 12px 32px rgba(23, 35, 36, 0.08);
 
   --font-head: 'Manrope', ui-sans-serif, system-ui, sans-serif;
@@ -67,6 +77,24 @@
     --hover: rgba(241, 238, 231, 0.06);
     --danger: #ff8a7a;
     --warning-bg: #3a2c1f;
+  --cloud-fill: #e8eeeb;
+  --cloud-back: #6f8581;
+  --cloud-shade: #c7d3cf;
+  --cloud-storm: #a3adba;
+  --cloud-tint: #30474a;
+  --moon-fill: #f3e8cc;
+  --moon-crater: #d8c79c;
+  --moon-tint: #3b4a47;
+  --rain: #7cc4d8;
+    --cloud-fill: #e8eeeb;
+    --cloud-back: #6f8581;
+    --cloud-shade: #c7d3cf;
+    --cloud-storm: #a3adba;
+    --cloud-tint: #30474a;
+    --moon-fill: #f3e8cc;
+    --moon-crater: #d8c79c;
+    --moon-tint: #3b4a47;
+    --rain: #7cc4d8;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.35);
   }
 }
@@ -742,6 +770,16 @@ svg {
 .search-submit:hover:not(:disabled) {
   color: var(--text);
 }
+.locate-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+.locate-button:disabled {
+  opacity: 0.6;
+  text-decoration: none;
+}
 .suggestions {
   position: absolute;
   z-index: 20;
@@ -907,11 +945,110 @@ svg {
 .hero-art {
   grid-area: art;
   justify-self: end;
-  width: clamp(112px, 34vw, 220px);
+  width: clamp(120px, 36vw, 236px);
   height: auto;
   color: var(--text);
   overflow: visible;
-  --icon-fill: var(--halo);
+  /* The disc picks up the weather tint from .app[data-sky]. */
+  --hero-in: color-mix(in srgb, var(--sky) 30%, var(--halo));
+  --hero-out: var(--halo);
+}
+.weather-icon {
+  --icon-fill: var(--cloud-tint);
+}
+
+/* Hero motion (stops under prefers-reduced-motion, see the end of this file) */
+.ha-spin {
+  animation: ha-spin 48s linear infinite;
+}
+.ha-drift {
+  animation: ha-drift 7s ease-in-out infinite alternate;
+}
+.ha-drop {
+  animation: ha-drop 1.2s linear infinite;
+}
+.ha-flake {
+  animation: ha-flake 2.8s ease-in-out infinite;
+}
+.ha-fog {
+  animation: ha-fog 5s ease-in-out infinite alternate;
+}
+.ha-flash {
+  animation: ha-flash 4.5s linear infinite;
+}
+.ha-twinkle {
+  animation: ha-twinkle 3s ease-in-out infinite;
+}
+@keyframes ha-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ha-drift {
+  from {
+    transform: translateX(-3px);
+  }
+  to {
+    transform: translateX(4px);
+  }
+}
+@keyframes ha-drop {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  20%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(18px);
+    opacity: 0;
+  }
+}
+@keyframes ha-flake {
+  0% {
+    transform: translateY(-4px);
+    opacity: 0;
+  }
+  25%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+}
+@keyframes ha-fog {
+  from {
+    transform: translateX(-6px);
+  }
+  to {
+    transform: translateX(6px);
+  }
+}
+@keyframes ha-flash {
+  0%,
+  86%,
+  100% {
+    opacity: 1;
+  }
+  89% {
+    opacity: 0.25;
+  }
+  92% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.35;
+  }
+}
+@keyframes ha-twinkle {
+  50% {
+    transform: scale(0.45);
+    opacity: 0.4;
+  }
 }
 .current {
   container-type: inline-size;

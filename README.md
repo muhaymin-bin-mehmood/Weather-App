@@ -2,7 +2,7 @@
 
 A responsive, installable weather dashboard. Search any city, see current conditions and a 5-day forecast, keep up to five favourites, use it offline for the last city you viewed, and get a daily morning reminder.
 
-**Live:** _add the Vercel URL here after deploying_
+**Live:** https://weather-app-eight-mu-26.vercel.app
 **Built for:** Edspire Frontend (React) technical challenge, November 2026
 
 ---
@@ -19,7 +19,7 @@ A responsive, installable weather dashboard. Search any city, see current condit
 | Offline | The last viewed city's full forecast is saved after every successful load. Offline, the app opens from the cache, shows that city and an offline banner with the time of the data, and disables search with a reason. It refreshes on its own when the connection returns. |
 | Daily reminder | User picks a time. An explanation comes **before** the browser's permission prompt. Unsupported, denied and iOS-not-installed states are handled without breaking anything else. **On time while the app is open; best-effort or unavailable when it is closed.** See [limitations](#known-limitations). |
 | Responsive | Checked at 375, 768, 1024, 1280 and 1568 px: no horizontal scroll, touch targets ≥ 44 × 44 px. On phones the 5-day forecast becomes a list; the hero and forecast switch layout with container queries, not just viewport width. |
-| Bonus | °C/°F toggle (persisted, converts at render time with no refetch), light/dark/system theme (persisted, applied before first paint), line-art weather icons, a short outlook line written from the live reading, and motion that respects `prefers-reduced-motion`. |
+| Bonus | Animated hero illustrations for all eight conditions, day and night (CSS motion, stopped under `prefers-reduced-motion`), °C/°F toggle (persisted, converts at render time with no refetch), light/dark/system theme (persisted, applied before first paint), line-art weather icons, a short outlook line written from the live reading, and motion that respects `prefers-reduced-motion`. |
 
 ## Design
 
@@ -46,6 +46,16 @@ These two were added on request after the core requirements were done. Neither i
   - long lists such as countries get a filter field
   - the list opens upwards when there is no room below, and it scrolls itself without moving the page
   - the reminder time is still stored as 24-hour `HH:MM`, so scheduling did not change
+
+- **"Use my current location".** A button under the search. It never asks on page load; permission is requested only when the button is pressed. Coordinates come from the browser's Geolocation API with city-level accuracy. The place name comes from OpenWeatherMap's reverse geocoder; if that fails, the city is called "Current location" and the forecast still loads. Blocked permission, an insecure page, no fix and a timeout each get their own inline message.
+- **Richer hero illustration.** Each condition has its own scene:
+  - a glowing gradient sun, or a crescent moon with twinkling stars
+  - white clouds with a soft back layer; a grey storm cloud with an ember bolt
+  - falling rain and snow, and drifting fog
+  - the brand orbit passes behind and then in front of the scene, with the ember dot travelling along it
+  - the disc picks up the same weather tint as the page
+
+  All 16 states (8 conditions × day/night) were checked side by side in light and dark mode in a throwaway gallery rendered from the real components.
 
 ## Setup
 

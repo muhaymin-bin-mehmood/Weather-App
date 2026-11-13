@@ -310,3 +310,46 @@ Every message I sent to the agent is listed in order. Each entry keeps these par
   - In the browser pane at 1280 px (light) and 375 px (dark): typed "Kar", then picked India by keyboard. The country showed "India", the city field emptied, its suggestions closed, the placeholder read "Search a city in India", and focus returned to the picker.
   - Hour changed 07→08 by keyboard and was saved to IndexedDB as `08:30`. Escape on the minute list changed nothing.
   - In my Chrome, the popup rendered fully opaque. In the hidden browser pane, animations were paused.
+
+## Message 17
+
+**My message:** "Yes, push". `d58cb1c` was pushed, and GitHub's `main` matched the local branch.
+
+## Message 18
+
+**My message:** "Yes, guide me". The agent opened vercel.com/new in my Chrome. I imported the repo, passed Vercel's identity check, added `VITE_OWM_KEY` and `VITE_RAPIDAPI_KEY` as Vercel environment variables, and deployed.
+
+## Message 19 (with a screenshot of the deployed app)
+
+**My message:** "Current location bhi mangna chiye tha na us ki basis par weather show honi chiye"
+
+(Translation: "Shouldn't it also ask for the current location, and show the weather based on that?")
+
+Then, while the agent was working: the live URL, `https://weather-app-eight-mu-26.vercel.app/`.
+
+**Agent actions:**
+
+- Noted that geolocation is not in the brief, then built it as an extra.
+- **Behaviour.** A "Use my current location" button; permission is asked only when it is pressed. The name comes from OpenWeatherMap reverse geocoding: curl returned 200 "Lahore, Punjab, PK" for Lahore's coordinates. Blocked, insecure, unavailable and timeout each have their own inline message.
+- **Checked:** the denied path in the browser pane (permission `denied` showed the blocked message and the weather on screen stayed). The allowed path needs a person to click Allow in Chrome's prompt, so it was left for me to check on the live site.
+- Put the live URL in README.
+
+## Message 20 (with a screenshot, the hero illustration circled)
+
+**My message:** "ye icons bhi thode attractive banao" (Translation: "make these icons a bit more attractive too")
+
+Then, while the agent was working: "look for the weather of normal to worse to check if it's looking good the icon ?"
+
+**Agent actions:**
+
+- **Hero illustration rebuilt as layered scenes:**
+  - a weather-tinted gradient disc
+  - the orbit split into a back half and a front half, so it passes behind and then in front of the weather
+  - an ember dot moving along the orbit
+  - a gradient sun with a glow and slowly turning rays; a cream moon with craters and twinkling stars
+  - white clouds with a back layer; a storm cloud with a flashing bolt
+  - falling rain and snow, and drifting fog
+- Gradient ids are now unique per illustration, so two on one page can't share colours.
+- Forecast icons became duotone: tinted sun core, tinted moon, teal rain.
+- **Checked every condition, mild to severe.** Live weather can't be chosen, so a throwaway gallery (not in the repo) rendered all 8 conditions × day/night with the real components and CSS. It was viewed in light and dark mode. It showed that rain, drizzle and snow were too small and were crossed by the orbit line. The cloud was lifted and the drops and flakes made bigger, then the gallery was checked again.
+- Rain, as live weather in Karawala, Nicaragua, was also checked in my Chrome, where the animation runs.
